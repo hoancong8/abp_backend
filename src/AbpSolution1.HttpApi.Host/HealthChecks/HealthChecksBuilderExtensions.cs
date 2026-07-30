@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Net.Http;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
