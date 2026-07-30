@@ -22,14 +22,15 @@ public static class HealthChecksBuilderExtensions
         var configuration = services.GetConfiguration();
         var healthCheckUrl = configuration["App:HealthCheckUrl"];
 
-        if (string.IsNullOrEmpty(healthCheckUrl))
+        var targetEndpoint = configuration["App:HealthUiCheckUrl"] ?? healthCheckUrl;
+        if (string.IsNullOrEmpty(targetEndpoint) || targetEndpoint.StartsWith("/"))
         {
-            healthCheckUrl = "/health-status";
+            targetEndpoint = "http://127.0.0.1/health-status";
         }
 
         var healthChecksUiBuilder = services.AddHealthChecksUI(settings =>
         {
-            settings.AddHealthCheckEndpoint("AbpSolution1 Health Status", configuration["App:HealthUiCheckUrl"] ?? healthCheckUrl);
+            settings.AddHealthCheckEndpoint("AbpSolution1 Health Status", targetEndpoint);
         });
 
         // Set your HealthCheck UI Storage here
