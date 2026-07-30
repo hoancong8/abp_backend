@@ -1,0 +1,66 @@
+# Phiên bản compose (Docker Compose mới không cần dòng này)
+version: "3.9"
+
+services:
+
+  # =========================
+  # SQL Server Container
+  # =========================
+  sqlserver:
+    # Image SQL Server 2022 từ Microsoft
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+    # Tên container
+    container_name: abp-sql
+
+    # Biến môi trường khi khởi tạo SQL Server
+    environment:
+      # Chấp nhận điều khoản sử dụng
+      ACCEPT_EULA: "Y"
+
+      # Mật khẩu tài khoản sa
+      MSSQL_SA_PASSWORD: "YourPassword123!"
+
+    # Map cổng
+    # Máy thật:1433 -> Container:1433
+    ports:
+      - "1433:1433"
+
+    # Lưu dữ liệu SQL ra ngoài container
+    # Khi xóa container thì dữ liệu vẫn còn
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  # =========================
+  # Backend (.NET API)
+  # =========================
+  backend:
+
+    # Build image từ Dockerfile
+    build:
+      # Thư mục chứa source và Dockerfile
+      context: ./src/AbpSolution1.HttpApi.Host
+
+      # Tên Dockerfile
+      dockerfile: Dockerfile
+
+    # Tên container
+    container_name: AbpSolution1-api
+
+    # Map cổng
+    # Máy thật:8080 -> Container:80
+    ports:
+      - "8080:80"
+
+    # Chỉ khởi động backend sau khi SQL Server được tạo
+    # (không đảm bảo SQL Server đã sẵn sàng nhận kết nối)
+    depends_on:
+      - sqlserver
+
+# =========================
+# Docker Volume
+# =========================
+volumes:
+  # định nghĩa volume
+  # Volume lưu dữ liệu SQL Server
+  sql_data:
