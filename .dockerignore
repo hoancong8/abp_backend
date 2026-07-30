@@ -1,0 +1,13 @@
+# Ignore build output & temp files
+**/.git
+**/.vs
+**/.vscode
+**/.idea
+**/bin
+**/obj
+**/Logs
+**/node_modules
+**/angular
+**/test
+*.user
+*.suo
