@@ -189,6 +189,7 @@ ClientBin/
 *.dbmdl
 *.dbproj.schemaview
 *.pfx
+!src/AbpSolution1.HttpApi.Host/openiddict.pfx
 *.publishsettings
 node_modules/
 orleans.codegen.cs
