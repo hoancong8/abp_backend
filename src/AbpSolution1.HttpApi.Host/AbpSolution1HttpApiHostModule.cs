@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.EntityFrameworkCore;
+using Volo.Abp.Data;
+using Volo.Abp.Threading;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
@@ -301,5 +304,22 @@ public class AbpSolution1HttpApiHostModule : AbpModule
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
         app.UseConfiguredEndpoints();
+    }
+
+    public override void OnPostApplicationInitialization(ApplicationInitializationContext context)
+    {
+        using (var scope = context.ServiceProvider.CreateScope())
+        {
+            AsyncHelper.RunSync(async () =>
+            {
+                await scope.ServiceProvider
+                    .GetRequiredService<AbpSolution1DbContext>()
+                    .Database.MigrateAsync();
+
+                await scope.ServiceProvider
+                    .GetRequiredService<IDataSeeder>()
+                    .SeedAsync();
+            });
+        }
     }
 }
