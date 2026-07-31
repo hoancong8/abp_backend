@@ -3,12 +3,12 @@ import { Environment } from '@abp/ng.core';
 const baseUrl = 'http://localhost:4200';
 
 const oAuthConfig = {
-  issuer: 'https://localhost:44346/',
+  issuer: 'http://localhost:8080/',
   redirectUri: baseUrl,
   clientId: 'AbpSolution1_App',
   responseType: 'code',
   scope: 'offline_access AbpSolution1',
-  requireHttps: true,
+  requireHttps: false,
 };
 
 export const environment = {
@@ -20,7 +20,7 @@ export const environment = {
   oAuthConfig,
   apis: {
     default: {
-      url: 'https://localhost:44346',
+      url: 'http://localhost:8080',
       rootNamespace: 'AbpSolution1',
     },
     AbpAccountPublic: {
