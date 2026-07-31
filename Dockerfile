@@ -26,12 +26,17 @@ RUN dotnet publish "src/AbpSolution1.HttpApi.Host/AbpSolution1.HttpApi.Host.cspr
     --no-restore \
     -o /app/publish
 
-# Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+# Stage 2: Low-memory Optimized Runtime (Alpine)
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:80
+# Environment variables to optimize memory on 1GB VPS
+ENV ASPNETCORE_URLS=http://+:80 \
+    DOTNET_gcServer=0 \
+    DOTNET_GCHeapHardLimitPercent=40 \
+    DOTNET_RUNNING_IN_CONTAINER=true
+
 EXPOSE 80
 
 ENTRYPOINT ["dotnet", "AbpSolution1.HttpApi.Host.dll"]

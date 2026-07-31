@@ -1,63 +1,80 @@
+version: '3.8'
+
 services:
 
   # =========================
-  # SQL Server Container
+  # PostgreSQL Container (Lightweight DB for 1GB RAM VPS)
   # =========================
-  sqlserver:
-    # Image SQL Server 2022 từ Microsoft
-    image: mcr.microsoft.com/mssql/server:2022-latest
-
-    # Tên container
-    container_name: abp-sql
-
-    # Biến môi trường khi khởi tạo SQL Server
+  postgres:
+    image: postgres:16-alpine
+    container_name: abp-postgres
+    restart: unless-stopped
     environment:
-      # Chấp nhận điều khoản sử dụng
-      ACCEPT_EULA: "Y"
-
-      # Mật khẩu tài khoản sa
-      MSSQL_SA_PASSWORD: "YourPassword123!"
-
-    # Map cổng
-    # Máy thật:1433 -> Container:1433
+      POSTGRES_DB: AbpSolution1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: YourPassword123!
     ports:
-      - "1433:1433"
-
-    # Lưu dữ liệu SQL ra ngoài container
-    # Khi xóa container thì dữ liệu vẫn còn
+      - "5432:5432"
     volumes:
-      - sql_data:/var/opt/mssql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 150M
 
   # =========================
-  # Backend (.NET API)
+  # Backend (.NET 10 API Host)
   # =========================
   backend:
-
-    # Build image từ Dockerfile
     build:
-      # Thư mục chứa source và Dockerfile
-      context: ./src/AbpSolution1.HttpApi.Host
-
-      # Tên Dockerfile
+      context: ./
       dockerfile: Dockerfile
-
-    # Tên container
-    container_name: AbpSolution1-api
-
-    # Map cổng
-    # Máy thật:8080 -> Container:80
+    container_name: abp-api
+    restart: unless-stopped
     ports:
       - "8080:80"
-
-    # Chỉ khởi động backend sau khi SQL Server được tạo
-    # (không đảm bảo SQL Server đã sẵn sàng nhận kết nối)
+    environment:
+      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=AbpSolution1;Username=postgres;Password=YourPassword123!
+      - App__SelfUrl=http://163.227.231.23:8080
+      - App__AngularUrl=http://163.227.231.23:4200
+      - App__CorsOrigins=http://163.227.231.23:4200,http://localhost:4200,http://163.227.231.23:8080
+      - AuthServer__Authority=http://163.227.231.23:8080
+      - AuthServer__RequireHttpsMetadata=false
+      - DOTNET_gcServer=0
+      - DOTNET_GCHeapHardLimitPercent=40
     depends_on:
-      - sqlserver
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+
+  # =========================
+  # Frontend (Angular + Nginx Alpine)
+  # =========================
+  frontend:
+    build:
+      context: ./angular
+      dockerfile: Dockerfile
+    container_name: abp-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 50M
 
 # =========================
-# Docker Volume
+# Docker Volumes
 # =========================
 volumes:
-  # định nghĩa volume
-  # Volume lưu dữ liệu SQL Server
-  sql_data:
+  postgres_data:

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -17,7 +17,7 @@ public class AbpSolution1DbContextFactory : IDesignTimeDbContextFactory<AbpSolut
         AbpSolution1EfCoreEntityExtensionMappings.Configure();
 
         var builder = new DbContextOptionsBuilder<AbpSolution1DbContext>()
-            .UseSqlServer(configuration.GetConnectionString("Default"));
+            .UseNpgsql(configuration.GetConnectionString("Default"));
         
         return new AbpSolution1DbContext(builder.Options);
     }
