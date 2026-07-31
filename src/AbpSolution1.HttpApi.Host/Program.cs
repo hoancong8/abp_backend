@@ -1,10 +1,13 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
+using Volo.Abp.Data;
+using AbpSolution1.EntityFrameworkCore;
 
 namespace AbpSolution1;
 
@@ -33,6 +36,20 @@ public class Program
                 });
             await builder.AddApplicationAsync<AbpSolution1HttpApiHostModule>();
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                Log.Information("Migrating database and seeding data...");
+                await scope.ServiceProvider
+                    .GetRequiredService<AbpSolution1DbContext>()
+                    .Database.MigrateAsync();
+
+                await scope.ServiceProvider
+                    .GetRequiredService<IDataSeeder>()
+                    .SeedAsync();
+                Log.Information("Database migration and seeding completed successfully.");
+            }
+
             await app.InitializeApplicationAsync();
             await app.RunAsync();
             return 0;
